@@ -1,4 +1,6 @@
 /venv
-/data_sample
-results.xml
 .idea
+/results
+/data_sample
+__pycache__/
+results.xml
