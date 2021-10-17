@@ -46,3 +46,12 @@ car_makers = ['Acura',
               'Toyota',
               'Volkswagen',
               'Volvo']
+
+translation_table = {
+    '&amp;nbsp;': ' ',
+    ' |': '\n',
+    '|': ' ',
+    '\\': '',
+    'engine =': '',
+    'engine=': ''
+}
