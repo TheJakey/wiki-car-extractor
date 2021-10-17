@@ -1,3 +1,5 @@
+extract_pages = False
+
 car_makers = ['Acura',
               'Alfa Romeo',
               'Audi',
@@ -55,3 +57,11 @@ translation_table = {
     'engine =': '',
     'engine=': ''
 }
+
+engine_infobox_regex = '\|[ \t]*engine[ \t]*=[ \t]*\{\{'
+
+engine_code_regex = '[a-zA-Z0-9_]*(?:[a-zA-Z]+[-/]*[0-9]|[-/]*[0-9][a-zA-Z]+)[a-zA-Z0-9_]*'
+
+page_file_path = 'results/'
+
+page_file_type = '.xml'

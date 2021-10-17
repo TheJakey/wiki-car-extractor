@@ -1,15 +1,11 @@
+import json
+
+from sklearn.feature_extraction.text import TfidfVectorizer
 import regex as re
 import os
 
-from constants import car_makers, translation_table
-
-engine_infobox_regex = '\|[ \t]*engine[ \t]*=[ \t]*\{\{'
-engine_code_regex = '[a-zA-Z0-9_]*(?:[a-zA-Z]+[-/]*[0-9]|[-/]*[0-9][a-zA-Z]+)[a-zA-Z0-9_]*'
-page_file_path = 'results/'
-
-page_file_type = '.xml'
-
-extract_pages = False
+from constants import car_makers, translation_table, page_file_path, page_file_type, engine_infobox_regex, \
+    engine_code_regex, extract_pages
 
 
 def extract_pages_from_file(wiki):
@@ -90,7 +86,6 @@ def get_engine_codes(file_path_name):
     with open(file_path_name, encoding='utf-8') as file:
         print('Getting engine codes for: ' + file.name)
 
-        # find_whole_infobox(file)
         engine_code_messy = find_engine_code_inside_infobox(file)
         for original, new in translation_table.items():
             engine_code_messy = engine_code_messy.replace(original, new)
@@ -99,9 +94,7 @@ def get_engine_codes(file_path_name):
 
         # get only engine code
         if engine_code_messy != '':
-            pattern = re.compile(engine_code_regex)
-            # print(pattern.findall(engine_code_messy))
-            engine_codes = pattern.findall(engine_code_messy)
+            engine_codes = re.compile(engine_code_regex).findall(engine_code_messy)
             print(engine_codes)
             print()
             return engine_codes
@@ -148,12 +141,21 @@ def create_engine_index(car_index):
     return engine_index
 
 
+def calculate_and_print_tf_idf(car_index):
+    corpus = []
+    for car, engines_list in car_index.items():
+        document = ''
+        for engine in engines_list:
+            document += engine + ' '
+        corpus.append(document)
+    print(corpus)
+    vectorizer = TfidfVectorizer()
+    values = vectorizer.fit_transform(corpus)
+    print('TF-IDF Values')
+    print(json.dumps(dict(zip(vectorizer.get_feature_names(), values.toarray()[0])), indent=4, sort_keys=True))
 
 
 def main():
-    result_file_path = 'results.xml'
-
-    # os.remove(result_file_path)
     print('starting')
 
     if extract_pages:
@@ -165,12 +167,14 @@ def main():
     engine_index = create_engine_index(car_index)
 
     command = ''
-    while command is not 'exit':
+    while command != 'exit':
         command = input("Insert Brand and/or Model: ")
         if command in car_index:
             print(car_index[command])
         elif command in engine_index:
             print(engine_index[command])
+        elif command == 'tfidf':
+            calculate_and_print_tf_idf(car_index)
 
 
 main()
