@@ -7,7 +7,8 @@ import os
 from constants import car_makers, translation_table, page_file_path, page_file_type, engine_infobox_regex, \
     engine_code_regex, extract_pages
 
-
+# TODO: Frekvencny slovnik na filtrovanie stranok, ktore niesu o aute (Ludia napr. - Francis Ford Coppola)
+# TODO: TF-IDF by malo mat zmysel, skus to pridat do indexu (surovo ako kod_motora: 2JZ-GTE, tf-idf: 0.69)
 def extract_pages_from_file(wiki):
     inside_page = False
     found_title = False
