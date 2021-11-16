@@ -1,11 +1,34 @@
 import os
 import re
 
-from constants import all_but_supported_chars_for_file_name, page_file_path, page_file_type
+from constants import all_but_supported_chars_for_file_name, page_file_path, page_file_type, car_makers
 
 
 def toFileName(potential_file_name):
     return re.sub(all_but_supported_chars_for_file_name, '-', potential_file_name)
+
+
+def verify_if_page_contains_car(file):
+    if file is None:
+        return
+
+    # file has to be closed before it can be read - because now it's opened in W mode
+    file_name = file.name
+    file.close()
+
+    # open file in R mode to read and analyze it's content
+    file = open(file_name, 'r', encoding='utf-8')
+
+    engine_occurrence = 0
+    for line in file.readlines():
+        engine_occurrence += line.lower().split().count('engine')
+
+    file.close()
+
+    # 5 -> 79 files - 0 persons
+    # 3 -> 116 files - 0 persons
+    if engine_occurrence < 3:
+        os.remove(file_name)
 
 
 def extract_pages_from_file(wiki):
@@ -23,7 +46,7 @@ def extract_pages_from_file(wiki):
             found_title = True
             title = re.sub('( *)?<[/]?title>(\n)?', '', line)
 
-            file = open(page_file_path + str(file_num) + '_' + toFileName(title) + page_file_type, 'a',
+            file = open(page_file_path + str(file_num) + '_' + toFileName(title) + page_file_type, 'w',
                         encoding='utf-8')
             file_num += 1
 
@@ -35,7 +58,7 @@ def extract_pages_from_file(wiki):
             file.write(line)
         if re.search('</page>', line, re.IGNORECASE):
             if file is not None:
-                file.close()
+                verify_if_page_contains_car(file)
 
             file = None
             found_title = False
