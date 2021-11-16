@@ -1,4 +1,4 @@
-extract_pages = False
+extract_pages_enabled = False
 
 car_makers = ['Acura',
               'Alfa Romeo',
