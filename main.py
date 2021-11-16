@@ -5,10 +5,17 @@ import regex as re
 import os
 
 from constants import car_makers, translation_table, page_file_path, page_file_type, engine_infobox_regex, \
-    engine_code_regex, extract_pages
+    engine_code_regex, extract_pages, all_but_supported_chars_for_file_name
+
 
 # TODO: Frekvencny slovnik na filtrovanie stranok, ktore niesu o aute (Ludia napr. - Francis Ford Coppola)
 # TODO: TF-IDF by malo mat zmysel, skus to pridat do indexu (surovo ako kod_motora: 2JZ-GTE, tf-idf: 0.69)
+
+
+def toFileName(potential_file_name):
+    return re.sub(all_but_supported_chars_for_file_name, '-', potential_file_name)
+
+
 def extract_pages_from_file(wiki):
     inside_page = False
     found_title = False
@@ -24,7 +31,7 @@ def extract_pages_from_file(wiki):
             found_title = True
             title = re.sub('( *)?<[/]?title>(\n)?', '', line)
 
-            file = open(page_file_path + str(file_num) + '_' + title + page_file_type, 'a', encoding='utf-8')
+            file = open(page_file_path + str(file_num) + '_' + toFileName(title) + page_file_type, 'a', encoding='utf-8')
             file_num += 1
 
             file.write(page)
@@ -81,6 +88,16 @@ def find_engine_code_inside_infobox(file):
     return engine_part
 
 
+def remove_duplicates(engine_codes):
+    res = []
+
+    for i in engine_codes:
+        if i not in res:
+            res.append(i)
+
+    return res
+
+
 def get_engine_codes(file_path_name):
     # print('Getting engine codes...')
 
@@ -96,9 +113,8 @@ def get_engine_codes(file_path_name):
         # get only engine code
         if engine_code_messy != '':
             engine_codes = re.compile(engine_code_regex).findall(engine_code_messy)
-            print(engine_codes)
-            print()
-            return engine_codes
+
+            return remove_duplicates(engine_codes)
 
 
 def remove_previous_results():
@@ -108,6 +124,7 @@ def remove_previous_results():
 
 def get_car_name_from_file_name(name):
     name = re.sub('[0-9]*_', '', name)
+    name = re.sub('-', ' ', name)
     return re.sub('.xml', '', name)
 
 
@@ -160,7 +177,8 @@ def main():
     print('starting')
 
     if extract_pages:
-        with open('data_sample/enwiki-latest-pages-articles1.xml-p1p41242', encoding='utf-8') as wiki:
+        # with open('data_sample/enwiki-latest-pages-articles1.xml-p1p41242', encoding='utf-8') as wiki:
+        with open('data_sample/enwiki-latest-pages-articles11.xml-p5399367p6899366', encoding='utf-8') as wiki:
             remove_previous_results()
             extract_pages_from_file(wiki)
 
