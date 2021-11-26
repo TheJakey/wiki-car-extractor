@@ -51,7 +51,6 @@ def export_indexes_to_file():
         .dropna(how='any') \
         .rdd \
         .filter(lambda page: any(maker + ' ' in page['title'] for maker in car_makers)) \
-        .map(lambda row: row.asDict(True)) \
         .flatMap(lambda page: create_cars_index(page['title'], page['text'])) \
         .filter(lambda index: index[1] is not None) \
         .groupByKey() \
