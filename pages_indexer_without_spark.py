@@ -1,3 +1,4 @@
+import os
 import re
 
 from constants import engine_infobox_regex, engine_code_regex, translation_table, page_file_path
@@ -9,11 +10,30 @@ def get_car_name_from_file_name(name):
     return re.sub('.xml', '', name)
 
 
-def find_engine_code_inside_infobox(lines):
+def get_engine_codes(file_path_name):
+    # print('Getting engine codes...')
+
+    with open(file_path_name, encoding='utf-8') as file:
+        print('Getting engine codes for: ' + file.name)
+
+        engine_code_messy = find_engine_code_inside_infobox(file)
+        for original, new in translation_table.items():
+            engine_code_messy = engine_code_messy.replace(original, new)
+
+        engine_code_messy = re.sub('\{\{ubl|[\{\}\[\]]*', '', engine_code_messy)
+
+        # get only engine code
+        if engine_code_messy != '':
+            engine_codes = re.compile(engine_code_regex).findall(engine_code_messy)
+
+            return remove_duplicates(engine_codes)
+
+
+def find_engine_code_inside_infobox(file):
     found_engine = False
     engine_part = ''
     open_curly_brackets = 0
-    for line in lines:
+    for line in file:
         if re.search(engine_infobox_regex, line, re.IGNORECASE):
             found_engine = True
 
@@ -33,24 +53,6 @@ def find_engine_code_inside_infobox(lines):
     return engine_part
 
 
-def get_engine_codes(title, lines):
-    # print('Getting engine codes...')
-
-    print('Getting engine codes for: ' + title)
-
-    engine_code_messy = find_engine_code_inside_infobox(lines)
-    for original, new in translation_table.items():
-        engine_code_messy = engine_code_messy.replace(original, new)
-
-    engine_code_messy = re.sub('\{\{ubl|[\{\}\[\]]*', '', engine_code_messy)
-
-    # get only engine code
-    if engine_code_messy != '':
-        engine_codes = re.compile(engine_code_regex).findall(engine_code_messy)
-
-        return remove_duplicates(engine_codes)
-
-
 def remove_duplicates(engine_codes):
     res = []
 
@@ -61,19 +63,18 @@ def remove_duplicates(engine_codes):
     return res
 
 
-def create_cars_index(title, text):
-    new_indexes = []
+def create_cars_index():
+    car_index = {}
 
-    engine_codes = get_engine_codes(title, text.split('\n'))
+    index = 0
+    for file_name in os.listdir(page_file_path):
+        print(index)
+        index += 1
+        engine_codes = get_engine_codes(page_file_path + file_name)
+        if engine_codes is not None:
+            car_index[get_car_name_from_file_name(file_name)] = engine_codes
 
-    new_indexes.append([title, engine_codes])
-
-    if engine_codes is not None:
-        for engine_code in engine_codes:
-            if engine_code is not None:
-                new_indexes.append([engine_code, title])
-
-    return new_indexes
+    return car_index
 
 
 def create_engine_index(car_index):

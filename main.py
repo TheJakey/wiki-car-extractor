@@ -1,12 +1,12 @@
 import json
 
 import regex as re
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from constants import extract_pages_enabled
-from pages_extractor import extract_pages
+from constants import extract_pages_enabled, car_makers
 from pages_indexer import create_cars_index, create_engine_index
-
 
 # TODO: Frekvencny slovnik na filtrovanie stranok, ktore niesu o aute (Ludia napr. - Francis Ford Coppola)
 # TODO: TF-IDF by malo mat zmysel, skus to pridat do indexu (surovo ako kod_motora: 2JZ-GTE, tf-idf: 0.69)
@@ -41,12 +41,26 @@ def calculate_and_print_tf_idf(car_index):
     print(json.dumps(dict(zip(vectorizer.get_feature_names(), values.toarray()[0])), indent=4, sort_keys=True))
 
 
+def export_indexes_to_file():
+    session = SparkSession.builder.getOrCreate()
+    session.sparkContext.setLogLevel('WARN')
+
+    dataframe = session.read.format('xml').options(rowTag='page').load('enwiki-latest-pages-articles1.xml')
+
+    dataframe.select("title", col("revision.text._VALUE").alias('text')) \
+        .dropna(how='any') \
+        .rdd \
+        .filter(lambda page: any(maker + ' ' in page['title'] for maker in car_makers)) \
+        .map(lambda row: row.asDict(True)) \
+        .flatMap(lambda page: create_cars_index(page['title'], page['text'])) \
+        .filter(lambda index: index[1] is not None) \
+        .groupByKey() \
+        .mapValues(list) \
+        .saveAsTextFile('cars-index-final-export')
+
+
 def main():
     print('starting')
-
-    if extract_pages_enabled:
-        # extract_pages('data_sample/enwiki-latest-pages-articles1.xml-p1p41242')
-        extract_pages('data_sample/enwiki-latest-pages-articles11.xml-p5399367p6899366')
 
     car_index = create_cars_index()
     engine_index = create_engine_index(car_index)
@@ -61,5 +75,7 @@ def main():
         elif command == 'tfidf':
             calculate_and_print_tf_idf(car_index)
 
-
-main()
+if (extract_pages_enabled):
+    export_indexes_to_file()
+else:
+    main()
