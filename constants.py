@@ -64,6 +64,6 @@ engine_code_regex = '[a-zA-Z0-9_]*(?:[a-zA-Z]+[-/]*[0-9]|[-/]*[0-9][a-zA-Z]+)[a-
 
 all_but_supported_chars_for_file_name = '[^a-zA-ZÀ-ž0-9]'
 
+processed_data_path = 'cars_extracted_from_wiki/'
 page_file_path = 'results/'
-
 page_file_type = '.xml'
