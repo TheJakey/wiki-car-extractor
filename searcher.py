@@ -1,6 +1,7 @@
 import lucene
 
 from java.nio.file import Paths
+from constants import index_path
 from org.apache.lucene.search import IndexSearcher
 from org.apache.lucene.index import DirectoryReader
 from org.apache.lucene.store import SimpleFSDirectory
@@ -11,7 +12,7 @@ lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
 print('lucene', lucene.VERSION)
 
-directory = SimpleFSDirectory(Paths.get("tempIndex"))
+directory = SimpleFSDirectory(Paths.get(index_path))
 searcher = IndexSearcher(DirectoryReader.open(directory))
 analyzer = StandardAnalyzer()
 

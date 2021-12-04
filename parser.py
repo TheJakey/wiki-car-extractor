@@ -1,12 +1,22 @@
-import re
+import regex as re
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
 
-from constants import engine_infobox_regex, engine_code_regex, translation_table, page_file_path
+from pages_indexer import create_cars_index
+from constants import car_makers, engine_infobox_regex, engine_code_regex, translation_table
 
 
-def get_car_name_from_file_name(name):
-    name = re.sub('[0-9]*_', '', name)
-    name = re.sub('-', ' ', name)
-    return re.sub('.xml', '', name)
+# TODO: Frekvencny slovnik na filtrovanie stranok, ktore niesu o aute (Ludia napr. - Francis Ford Coppola)
+
+
+def remove_duplicates(engine_codes):
+    res = []
+
+    for i in engine_codes:
+        if i not in res:
+            res.append(i)
+
+    return res
 
 
 def find_engine_code_inside_infobox(lines):
@@ -28,8 +38,6 @@ def find_engine_code_inside_infobox(lines):
         if open_curly_brackets <= 0:
             found_engine = False
 
-
-    # print(engine_part + '\n\n')
     return engine_part
 
 
@@ -51,16 +59,6 @@ def get_engine_codes(title, lines):
         return remove_duplicates(engine_codes)
 
 
-def remove_duplicates(engine_codes):
-    res = []
-
-    for i in engine_codes:
-        if i not in res:
-            res.append(i)
-
-    return res
-
-
 def create_cars_index(title, text):
     new_indexes = []
 
@@ -76,18 +74,17 @@ def create_cars_index(title, text):
     return new_indexes
 
 
-def create_engine_index(car_index):
-    engine_index = {}
-    for car, engines_list in car_index.items():
-        for engine in engines_list:
-            engine_index[engine] = []
-            engine_index[engine].append(car)
+session = SparkSession.builder.getOrCreate()
+session.sparkContext.setLogLevel('WARN')
 
-            for different_car, different_car_engines_list in car_index.items():
-                if car == different_car:
-                    continue
-                if any(engine == different_car_engine for different_car_engine in different_car_engines_list):
-                    engine_index[engine].append(different_car)
+dataframe = session.read.format('xml').options(rowTag='page').load('enwiki-latest-pages-articles1.xml')
 
-    print(engine_index)
-    return engine_index
+dataframe.select("title", col("revision.text._VALUE").alias('text')) \
+    .dropna(how='any') \
+    .rdd \
+    .filter(lambda page: any(maker + ' ' in page['title'] for maker in car_makers)) \
+    .flatMap(lambda page: create_cars_index(page['title'], page['text'])) \
+    .filter(lambda index: index[1] is not None) \
+    .groupByKey() \
+    .mapValues(list) \
+    .saveAsTextFile('cars-index-final-export')

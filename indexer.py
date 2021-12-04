@@ -2,6 +2,7 @@ import os
 import ast
 import lucene
 from java.nio.file import Paths
+from constants import index_path
 from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.index import IndexWriter, IndexWriterConfig
 from org.apache.lucene.document import Document, Field, TextField
@@ -33,7 +34,7 @@ def create_documents():
 
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
-store = SimpleFSDirectory(Paths.get("tempIndex"))
+store = SimpleFSDirectory(Paths.get(index_path))
 analyzer = StandardAnalyzer()
 config = IndexWriterConfig(analyzer)
 config.setOpenMode(IndexWriterConfig.OpenMode.CREATE)

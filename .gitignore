@@ -4,3 +4,5 @@
 /data_sample
 __pycache__/
 results.xml
+index/
+parsed_car_data/
