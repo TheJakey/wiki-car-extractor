@@ -2,7 +2,6 @@ import regex as re
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 
-from pages_indexer import create_cars_index
 from constants import car_makers, engine_infobox_regex, engine_code_regex, translation_table
 
 
@@ -74,15 +73,20 @@ def create_cars_index(title, text):
     return new_indexes
 
 
+def validate_car_page(text):
+    return text.count('engine') > 2
+
+
 session = SparkSession.builder.getOrCreate()
 session.sparkContext.setLogLevel('WARN')
 
-dataframe = session.read.format('xml').options(rowTag='page').load('enwiki-latest-pages-articles1.xml')
+dataframe = session.read.format('xml').options(rowTag='page').load('enwiki-latest-pages-articles-small.xml')
 
 dataframe.select("title", col("revision.text._VALUE").alias('text')) \
     .dropna(how='any') \
     .rdd \
     .filter(lambda page: any(maker + ' ' in page['title'] for maker in car_makers)) \
+    .filter(lambda page: validate_car_page(page['text'])) \
     .flatMap(lambda page: create_cars_index(page['title'], page['text'])) \
     .filter(lambda index: index[1] is not None) \
     .groupByKey() \
