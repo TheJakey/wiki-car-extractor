@@ -64,4 +64,4 @@ engine_infobox_regex = '\|[ \t]*engine[ \t]*=[ \t]*\{\{'
 engine_code_regex = '[a-zA-Z0-9_]*(?:[a-zA-Z]+[-/]*[0-9]|[-/]*[0-9][a-zA-Z]+)[a-zA-Z0-9_]*'
 
 index_path = 'index'
-processed_data_path = 'parsed_car_data/'
+processed_data_path = 'parsed_car_data/cars-giant-export/'

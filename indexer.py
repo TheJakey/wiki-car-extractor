@@ -11,13 +11,15 @@ from org.apache.lucene.store import SimpleFSDirectory
 from constants import processed_data_path
 
 
-def create_document(key, value, writer):
-    if (key is None or value is None):
+def create_document(car, engines, writer):
+    if (car is None or engines is None):
         return
 
+    engines = str(engines).lstrip('[[').rstrip(']]')
     doc = Document()
-    doc.add(Field("key", key, TextField.TYPE_STORED))
-    doc.add(Field("value", str(value), TextField.TYPE_STORED))
+    doc.add(Field("car", car, TextField.TYPE_STORED))
+    doc.add(Field("engines", engines, TextField.TYPE_STORED))
+    doc.add(Field("content", car + ' ' + engines, TextField.TYPE_STORED))
     writer.addDocument(doc)
 
 

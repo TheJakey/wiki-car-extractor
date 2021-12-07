@@ -8,6 +8,10 @@ from org.apache.lucene.store import SimpleFSDirectory
 from org.apache.lucene.queryparser.classic import QueryParser
 from org.apache.lucene.analysis.standard import StandardAnalyzer
 
+car = 'car'
+engines = 'engines'
+content = 'content'
+
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])
 
 print('lucene', lucene.VERSION)
@@ -18,13 +22,24 @@ analyzer = StandardAnalyzer()
 
 command = ''
 while command != 'exit':
-    command = input("Insert Brand and/or Model: ")
 
-    query = QueryParser('value', analyzer).parse("search " + command)
+    search_by = ''
+    while (search_by != car and search_by != engines):
+        selection = input("Search by (1 - car; 2 - engine; Press enter to keep default('content')): ")
+        if selection == '1':
+            search_by = car
+        elif selection == '2':
+            search_by = engines
+        elif selection == '':
+            search_by = content
+
+    command = input("Search term (to exit -> 'exit'): ")
+
+    query = QueryParser(search_by, analyzer).parse("search " + command)
     scoreDocs = searcher.search(query, 50).scoreDocs
 
-    print("%s total matching documents." % len(scoreDocs))
+    print("%s total matching documents." % len(scoreDocs), '\n')
 
     for scoreDoc in scoreDocs:
         doc = searcher.doc(scoreDoc.doc)
-        print('result:', doc.get('key'))
+        print(doc.get(car) + ': \n', doc.get(engines), '\n')
