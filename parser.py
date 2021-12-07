@@ -2,7 +2,7 @@ import regex as re
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 
-from constants import car_makers, engine_infobox_regex, engine_code_regex, translation_table
+from constants import car_makers, engine_infobox_regex, engine_code_regex, translation_table, export_directoryname, wiki_article_pages_xml_filename
 
 
 # TODO: Frekvencny slovnik na filtrovanie stranok, ktore niesu o aute (Ludia napr. - Francis Ford Coppola)
@@ -59,16 +59,14 @@ def get_engine_codes(title, lines):
 
 
 def create_cars_index(title, text):
+    title = title.encode('utf-8')
+    text = text.encode('utf-8')
+
     new_indexes = []
 
     engine_codes = get_engine_codes(title, text.split('\n'))
 
     new_indexes.append([title, engine_codes])
-
-    if engine_codes is not None:
-        for engine_code in engine_codes:
-            if engine_code is not None:
-                new_indexes.append([engine_code, title])
 
     return new_indexes
 
@@ -80,7 +78,7 @@ def validate_car_page(text):
 session = SparkSession.builder.getOrCreate()
 session.sparkContext.setLogLevel('WARN')
 
-dataframe = session.read.format('xml').options(rowTag='page').load('enwiki-latest-pages-articles-small.xml')
+dataframe = session.read.format('xml').options(rowTag='page').load(wiki_article_pages_xml_filename)
 
 dataframe.select("title", col("revision.text._VALUE").alias('text')) \
     .dropna(how='any') \
@@ -91,4 +89,4 @@ dataframe.select("title", col("revision.text._VALUE").alias('text')) \
     .filter(lambda index: index[1] is not None) \
     .groupByKey() \
     .mapValues(list) \
-    .saveAsTextFile('cars-index-final-export')
+    .saveAsTextFile(export_directoryname)

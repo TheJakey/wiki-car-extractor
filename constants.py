@@ -1,3 +1,6 @@
+wiki_article_pages_xml_filename = 'enwiki-latest-pages-articles.xml'
+export_directoryname = 'cars-giant-export'
+
 car_makers = ['Acura',
               'Alfa Romeo',
               'Audi',
