@@ -24,7 +24,8 @@ command = ''
 while command != 'exit':
 
     search_by = ''
-    while (search_by != car and search_by != engines):
+    while (search_by != car and search_by != engines and search_by != content):
+        selection = ''
         selection = input("Search by (1 - car; 2 - engine; Press enter to keep default('content')): ")
         if selection == '1':
             search_by = car
